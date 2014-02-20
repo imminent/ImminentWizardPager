@@ -12,18 +12,13 @@ import com.imminentmeals.android.actionbar.ActionBarOwner;
 import com.imminentmeals.android.core.Main;
 import com.imminentmeals.android.guava.Optional;
 import com.imminentmeals.android.models.Confirmation;
-import com.imminentmeals.android.models.Recipe;
 import com.imminentmeals.android.ui.CreationView;
-import com.imminentmeals.android.wizard.CustomerInfoPage;
-import com.imminentmeals.android.wizard.MultipleFixedChoicePage;
 import com.imminentmeals.android.wizard.Page;
 import com.imminentmeals.android.wizard.ReviewPage;
-import com.imminentmeals.android.wizard.SingleFixedChoicePage;
 import com.imminentmeals.android.wizard.WizardListener;
 import com.imminentmeals.android.wizard.WizardModel;
 import com.imminentmeals.android.wizard.ui.PageCallback;
 import dagger.Provides;
-import flow.Flow;
 import flow.Layout;
 import java.util.Arrays;
 import java.util.List;
@@ -44,17 +39,11 @@ public class CreationScreen implements Blueprint {
   }
 
   @Override public Object getDaggerModule() {
-    return Arrays.asList(new Module(), new SingleFixedChoicePage.Module(),
-                         new MultipleFixedChoicePage.Module(), new CustomerInfoPage.Module(),
-                         new ReviewPage.Module());
+    return Arrays.asList(new Module());
   }
 
   @dagger.Module(injects = CreationView.class, addsTo = Main.Module.class, library = true)
-  static class Module {
-
-    @Provides @Singleton Recipe providesRecipe() {
-      return new Recipe();
-    }
+  /* package */final static class Module {
 
     @Provides @Singleton PageCallback providesPageCallback(Presenter page_callback) {
       return page_callback;
@@ -69,10 +58,8 @@ public class CreationScreen implements Blueprint {
   public static class Presenter extends ViewPresenter<CreationView>
       implements PageCallback, ReviewCallback, WizardListener {
 
-    @Inject Presenter(Flow flow, ActionBarOwner action_bar, Recipe recipe) {
-      _flow = flow;
+    @Inject /* package */Presenter(ActionBarOwner action_bar) {
       _action_bar = action_bar;
-      _recipe = recipe;
       _wizard_model = Optional.absent();
       _current_page_sequence = Optional.absent();
       _adapter = Optional.absent();
@@ -98,13 +85,11 @@ public class CreationScreen implements Blueprint {
     }
 
     public void onNext(int current_page) {
-      assert _current_page_sequence.isPresent();
       if (current_page == _current_page_sequence.get().size()) {
         _confirmation_presenter.show(new Confirmation(_popup_message.get(),
                                                       _popup_confirm_button.get(),
                                                       _popup_cancel_button.get()));
       } else {
-        assert _adapter.isPresent();
         if (_is_editing_after_review) {
           getView().currentPage(_adapter.get().getCount() - 1);
         } else {
@@ -137,7 +122,6 @@ public class CreationScreen implements Blueprint {
         _wizard_model.get().load(icicle.getBundle("model"));
       }
       _wizard_model.get().registerListener(this);
-      view.showRecipe(_recipe);
       //noinspection unchecked
       _adapter = Optional.of(new WizardAdapter(view.getContext()));
       view.adapter(_adapter.get());
@@ -194,7 +178,6 @@ public class CreationScreen implements Blueprint {
     }
 
     private boolean recalculateCutOffPage() {
-      assert _current_page_sequence.isPresent();
       // Cut off the pager adapter at first required page that isn't completed
       final int count = _current_page_sequence.get().size();
       int cutoff_page = count + 1;
@@ -226,7 +209,6 @@ public class CreationScreen implements Blueprint {
       }
 
       @Override public Object instantiateItem(ViewGroup container, int position) {
-        assert _current_page_sequence.isPresent();
         final View view =
             (position >= _current_page_sequence.get().size())? ReviewPage.createView(_context)
                                                              : _current_page_sequence.get()
@@ -275,8 +257,6 @@ public class CreationScreen implements Blueprint {
       }
     }
 
-    private final Flow                    _flow;
-    private final Recipe                  _recipe;
     private       Optional<WizardModel>   _wizard_model;
     private       Optional<WizardAdapter> _adapter;
     /* package */ Optional<List<Page>> _current_page_sequence;

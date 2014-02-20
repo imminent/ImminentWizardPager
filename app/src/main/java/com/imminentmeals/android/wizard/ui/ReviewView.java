@@ -29,10 +29,6 @@ public class ReviewView extends LinearLayout {
   @InjectView(android.R.id.list) /* package */  ListView             list;
   @InjectView(android.R.id.title) /* package */ TextView             title;
 
-  public ReviewView(Context context) {
-    this(context, null);
-  }
-
   public ReviewView(Context context, AttributeSet attributes) {
     super(context, attributes);
     Mortar.inject(context, this);

@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import mortar.Mortar;
 
 /**
  * A page offering the user a number of non-mutually exclusive choices.
@@ -42,6 +44,7 @@ public class MultipleFixedChoicePage extends SingleFixedChoicePage {
   }
 
   @Override public View createView(Context context) {
+    context = Mortar.getScope(context).requireChild(this).createContext(context);
     return ((MultipleChoiceView) Layouts.createView(context, this)).withKey(key());
   }
 
@@ -51,8 +54,9 @@ public class MultipleFixedChoicePage extends SingleFixedChoicePage {
     final Optional<String[]> selections =
         Optional.fromNullable(_data.getStringArray(SIMPLE_DATA_KEY));
     if (selections.isPresent() && selections.get().length > 0) {
+      final String comma = ", ";
       for (String selection : selections.get()) {
-        if (string_builder.length() > 0) string_builder.append(", ");
+        if (string_builder.length() > 0) string_builder.append(comma);
         string_builder.append(selection);
       }
     }
@@ -74,15 +78,22 @@ public class MultipleFixedChoicePage extends SingleFixedChoicePage {
     return selections.isPresent() && selections.get().length > 0;
   }
 
-  @dagger.Module(injects = MultipleChoiceView.class, complete = false)
-  public static class Module {}
+  @Override public String getMortarScopeName() {
+    return "MultipleFixedChoicePage{key=" + key() + "}";
+  }
 
-  // TODO: not @Singleton since scope is longer than View currently
-  @ParametersAreNonnullByDefault
+  @Override public Object getDaggerModule() {
+    return new Module();
+  }
+
+  @dagger.Module(injects = MultipleChoiceView.class, complete = false)
+  /* package */final static class Module {}
+
+  @ParametersAreNonnullByDefault @Singleton
   public static class Presenter
       extends ChoiceViewPresenter<MultipleChoiceView, MultipleFixedChoicePage> {
 
-    @Inject Presenter(PageCallback callback) {
+    @Inject /* package */Presenter(PageCallback callback) {
       super(callback);
     }
 

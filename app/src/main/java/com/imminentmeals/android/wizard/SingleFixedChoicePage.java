@@ -29,12 +29,15 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import mortar.Blueprint;
+import mortar.Mortar;
 
 /**
  * A page offering the user a number of mutually exclusive choices.
  */
 @ParametersAreNonnullByDefault @Layout(R.layout.wizard_single_fixed_choice)
-public class SingleFixedChoicePage extends Page {
+public class SingleFixedChoicePage extends Page implements Blueprint {
   protected List<String> _choices;
 
   public SingleFixedChoicePage(WizardListener listener, String title) {
@@ -61,6 +64,7 @@ public class SingleFixedChoicePage extends Page {
   }
 
   @Override public View createView(Context context) {
+    context = Mortar.getScope(context).requireChild(this).createContext(context);
     return ((SingleChoiceView) Layouts.createView(context, this)).withKey(key());
   }
 
@@ -72,15 +76,22 @@ public class SingleFixedChoicePage extends Page {
     return !TextUtils.isEmpty(_data.getString(SIMPLE_DATA_KEY));
   }
 
-  @dagger.Module(injects = SingleChoiceView.class, complete = false)
-  public static class Module {}
+  @Override public String getMortarScopeName() {
+    return "SingleFixedChoicePage{key=" + key() + "}";
+  }
 
-  // TODO: not @Singleton since scope is longer than View currently
-  @ParametersAreNonnullByDefault
+  @Override public Object getDaggerModule() {
+    return new Module();
+  }
+
+  @dagger.Module(injects = SingleChoiceView.class, complete = false)
+  /* package */final static class Module {}
+
+  @ParametersAreNonnullByDefault @Singleton
   public static class Presenter
       extends ChoiceViewPresenter<SingleChoiceView, SingleFixedChoicePage> {
 
-    @Inject Presenter(PageCallback callback) {
+    @Inject /* package */Presenter(PageCallback callback) {
       super(callback);
     }
 

@@ -35,8 +35,10 @@ public class BranchPage extends SingleFixedChoicePage {
   }
 
   @Override public <T extends Page> Optional<T> findByKey(String key) {
-    if (key().equals(key)) //noinspection unchecked
-    { return Optional.of((T) this); }
+    if (key().equals(key)) {
+      //noinspection unchecked
+      return Optional.of((T) this);
+    }
 
     for (Branch branch : _branches) {
       final Optional<T> found = branch.child_page_list.findByKey(key);
@@ -54,6 +56,10 @@ public class BranchPage extends SingleFixedChoicePage {
         break;
       }
     }
+  }
+
+  @Override public String getMortarScopeName() {
+    return "BranchPage{key=" + key() + "}";
   }
 
   public BranchPage addBranch(String choice, Page... child_pages) {

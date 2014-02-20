@@ -14,7 +14,6 @@ import butterknife.InjectView;
 import butterknife.OnClick;
 import com.imminentmeals.android.R;
 import com.imminentmeals.android.guava.Optional;
-import com.imminentmeals.android.models.Recipe;
 import com.imminentmeals.android.screens.CreationScreen;
 import com.imminentmeals.android.wizard.ui.StepPagerStrip;
 import javax.inject.Inject;
@@ -97,8 +96,6 @@ public class CreationView extends LinearLayout {
     super.onDetachedFromWindow();
     presenter.dropView(this);
   }
-
-  public void showRecipe(Recipe recipe) {}
 
   public void numberOfSteps(int number_of_steps) {
     step_pager_strip.numberOfPages(number_of_steps);

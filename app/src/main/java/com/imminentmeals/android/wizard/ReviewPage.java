@@ -18,26 +18,37 @@ import java.util.Comparator;
 import java.util.List;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import mortar.Blueprint;
+import mortar.Mortar;
 import mortar.ViewPresenter;
 
 /**
  * Created by dandre on 2/11/14.
  */
 @ParametersAreNonnullByDefault @Layout(R.layout.wizard_review)
-public class ReviewPage {
+public class ReviewPage implements Blueprint {
 
   public static View createView(Context context) {
+    context = Mortar.getScope(context).requireChild(new ReviewPage()).createContext(context);
     return Layouts.createView(context, ReviewPage.class);
   }
 
-  @dagger.Module(injects = ReviewView.class, complete = false)
-  public static class Module {}
+  @Override public String getMortarScopeName() {
+    return getClass().getName();
+  }
 
-  // TODO: not @Singleton since scope is longer than View currently
-  @ParametersAreNonnullByDefault
+  @Override public Object getDaggerModule() {
+    return new Module();
+  }
+
+  @dagger.Module(injects = ReviewView.class, complete = false)
+  /* package */final static class Module {}
+
+  @ParametersAreNonnullByDefault @Singleton
   public static class Presenter extends ViewPresenter<ReviewView> implements WizardListener {
 
-    @Inject Presenter(ReviewCallback callback) {
+    @Inject /* package */Presenter(ReviewCallback callback) {
       _review_item_comparator = new Comparator<ReviewItem>() {
 
         @Override public int compare(ReviewItem a, ReviewItem b) {
@@ -68,7 +79,6 @@ public class ReviewPage {
 
     @Override public void dropView(ReviewView view) {
       super.dropView(view);
-      _review_callback = null;
       _wizard_model.unregisterListener(this);
     }
 
@@ -146,8 +156,8 @@ public class ReviewPage {
 
     private Comparator<ReviewItem> _review_item_comparator;
     private ReviewCallback         _review_callback;
-    /*package */ WizardModel _wizard_model;
     private List<ReviewItem> _current_review_items;
     private ReviewAdapter    _adapter;
+    /*package */ WizardModel _wizard_model;
   }
 }
